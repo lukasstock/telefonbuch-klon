@@ -1,0 +1,44 @@
+body {
+    background: black;
+}
+
+.hitlistitem {
+    box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.1);
+    -moz-box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid #cccccc;
+    margin: 0 0 20px 20px;
+    background: white;
+    box-sizing: border-box;
+    padding: 10px 15px 10px;
+    border-radius: 3px;
+    float: left;
+    width: 700px;
+}
+
+.hitlistitem.big {
+    margin-top: 15px;
+    margin-right: 18px;
+    float: none;
+    height: auto !important;
+    clear: both;
+}
+
+.hitlistitem .name {
+    font-family: Arial, serif;
+    font-size: 110%;
+    font-weight: bold;
+    line-height: normal;
+    padding-bottom: 3px;
+    clear: both;
+}
+
+.label{
+    color: white;
+}
+
+a{
+    color: blue;
+    cursor: pointer;
+    text-underline: black;
+}

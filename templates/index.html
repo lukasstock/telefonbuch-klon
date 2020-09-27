@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Telefonbuch-Kopie Lukas Stock</title>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"/>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+
+<label class="label" for="suchwort"> Suchwort:</label>
+<input id="suchwort" type="text" value="Cafe">
+<label class="label" for="ort"> Ort:</label>
+<input id="ort" type="text" value="Berlin">
+<button id="submit">Finden</button>
+<br>
+<div id="data"></div>
+
+<!-- Dialogbox für Detailansicht -->
+<div id="details" title="Details">
+    Name: <p id="detail_name" class="name"></p>
+    Tel.: <p id="detail_tel" class="name"></p>
+    Web: <p id="detail_web" class="name"></p>
+    Öffnungszeiten: <p id="detail_times" class="name"></p>
+    Bewertungen: <p id="detail_ratings" class="name"></p>
+</div>
+
+<div id="error"></div>
+
+</body>
+</html>
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        $(document).on('click', '#submit', function () {
+            $.ajax({
+                async: true,
+                type: 'POST',
+                dataType: 'json',
+                url: 'index.php',
+                data:
+                    {
+                        wort: $('#suchwort').val(),
+                        ort: $('#ort').val()
+                    },
+                success: function (data) {
+                    $('#data').html('');
+                    $('#error').html('');
+                    data.forEach((hit) => {
+                        var address = hit.address;
+                        $('#data').append('' +
+                            '<div class="hitlistitem big"> <a data-id ="' + hit.id + '" data-niceid="' + hit.niceid + '" class="name">' + hit.displayName + '</a  > </br>'
+                            + address.street +
+                            ' ' +
+                            address.houseNo +
+                            ', ' +
+                            address.postalCode +
+                            ' ' +
+                            address.locationName +
+                            '</div>');
+                    });
+                },
+                error: function () {
+                    $('#error').html('<p class="label"> Es wurden keine Suchergebnisse gefunden. </p>');
+                    $('#data').html('');
+                }
+            });
+        });
+
+        $(document).on('click', '.name', function () {
+            var niceid = $(this).data('niceid');
+            var id = $(this).data('id');
+            $.ajax({
+                async: true,
+                type: 'POST',
+                dataType: 'json',
+                url: 'index.php',
+                data:
+                    {
+                        niceid: niceid,
+                        id: id,
+                        wort: $('#suchwort').val(),
+                        ort: $('#ort').val()
+                    },
+                success: function (data) {
+                    data = data[0];
+                    $('#detail_times').html('');
+                    $('#detail_ratings').html('');
+                    $('#detail_name').html(data.niceid);
+                    $('#detail_tel').html(data.tel[0]['value']);
+
+                    //Wenn Website vorhanden wird diese hinterlegt ansonsten E-Mail
+                    if (data.online !== undefined) {
+                        var index = data.online.length > 1 ? 2 : 1;
+                        $('#detail_web').html(data.online[index - 1]['value']);
+                    }
+
+                    //Prüfen ob Öffnungszeiten angegeben
+                    if (data.openingHours === undefined) {
+                        $('#detail_times').html('Keine Öffnungszeiten angegeben');
+                    } else {
+
+                        var weekdays = new Array(7);
+                        weekdays[0]="Montag";
+                        weekdays[1]="Dienstag";
+                        weekdays[2]="Mittwoch";
+                        weekdays[3]="Donnerstag";
+                        weekdays[4]="Freitag";
+                        weekdays[5]="Samstag";
+                        weekdays[6]="Sonntag";
+
+                        for (var i = 1; i <= 7; i++) {
+                            if (data.openingHours.daysWithHours[i] !== undefined) {
+                                var from_time = data.openingHours.daysWithHours[i][0]['from'];
+                                var till_time = data.openingHours.daysWithHours[i][0]['to'];
+                                $('#detail_times').append(weekdays[i-1] + ': ' + from_time + ' Uhr bis ' + till_time + ' Uhr </br>');
+                            }
+                        }
+                    }
+
+                    //Wenn Bewertungen vorhanden
+                    if (data.ratings !== undefined) {
+                        data.ratings.golocal.ratings.forEach((rating) => {
+                            $('#detail_ratings').append(rating.sourceValue + ' Stern(e) von ' + rating.author + '</br>' + rating.text.replace(/\\n/g, '') + '</br></br>');
+                        });
+                    } else {
+                        $('#detail_ratings').html('Keine Bewertungen vorhanden');
+                    }
+
+                    $("#details").dialog("open");
+
+                }
+            });
+        });
+
+        $("#details").dialog({
+            autoOpen: false, modal: true, show: "blind", hide: "blind", width: '900px'
+        });
+
+    });
+</script>
